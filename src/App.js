@@ -6,7 +6,7 @@ import logo from './logo.svg';
 import { Counter } from './features/counter/Counter';
 import Button from '@mui/material/Button';
 import {
-  AppBar, Card, Chip, Container,
+  AppBar, Card, Chip, Collapse, Container,
   CssBaseline, Divider, Grid, IconButton,
   Input,
   InputAdornment,
@@ -163,6 +163,60 @@ const MembersParams = () => {
   )
 }
 
+const MemberCard = (props) => {
+  const [isExpanded, setExpanding] = React.useState(false);
+  const handleExpanding = () => setExpanding(!isExpanded);
+  return (
+    <Paper elevation={6} >
+      <Box sx={{ height: '200px', width: '100%' }}>
+        {props.data}
+      </Box>
+      <Collapse in={isExpanded} timeout='auto' >
+        <Box sx={{ height: '50px' }}></Box>
+      </Collapse>
+      <Button variant='contained' onClick={handleExpanding}>open</Button>
+    </Paper>
+  )
+}
+
+const MemberCardsGrid = (props) => {
+  const members = Array.from({ length: 10 }, (_, i) => i);
+
+  const widths = Object.entries(theme.breakpoints.values)
+    .map(e => e[1])
+    .sort((a, b) => a - b);
+  const allCols = [1, 1, 2, 2, 3];
+  function calcCols() {
+    let a;
+    widths.forEach((w, i) => { if (window.innerWidth > w) a = allCols[i] });
+    return a;
+  }
+  let [cols, setCols] = React.useState(calcCols());
+  React.useEffect(() => {
+    function handleResize() {
+      if (cols !== calcCols()) {
+        setCols(calcCols());
+      };
+    }
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    }
+  });
+  function column(n) {
+    return <Grid item xl={1} lg={1} md={1} sm={1} xs={1}
+      display={n === 0 ? 'block' : n === 1 ? { xs: 'none', md: 'block' }
+        : { xs: 'none', xl: 'block' }} >
+      <Stack spacing={1}
+        display={n === 0 ? { xs: 'contents', md: 'block' } : 'block'}>
+        {members.filter((_, i) => !((i + cols - n) % cols))
+          .map(m => <MemberCard data={m} />)}
+      </Stack>
+    </Grid>
+  }
+  return Array.from({ length: 3 }, (_, i) => column(i));
+}
+
 const CalculatingPage = () => {
   const [isOpen, setOpen] = React.useState(false);
   const handleOpen = () => setOpen(true);
@@ -210,9 +264,11 @@ const CalculatingPage = () => {
               <Grid item xl={1} lg={1} md={1} sm={1} xs={1} sx={{ display: { md: 'none' } }} >
                 <Paper sx={{ height: 300, }} elevation={6} >aaa</Paper>
               </Grid>
-              {Array.from({ length: 10 }, (_, i) => <Grid item xl={1} lg={1} md={1} sm={1} xs={1}>
-                <Paper sx={{ height: 200 }} elevation={6} >{i}</Paper>
-              </Grid>)}
+              <MemberCardsGrid />
+              {/* {Array.from({ length: 10 },
+                (_, i) => <Grid item xl={1} lg={1} md={1} sm={1} xs={1}>
+                  <MemberCard data={i} />
+                </Grid>)} */}
             </Grid>
           </Grid>
           <Grid item xl lg md sm xs sx={{
