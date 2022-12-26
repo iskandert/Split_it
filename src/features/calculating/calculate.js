@@ -1,17 +1,16 @@
 function calculate() {
 
-    let members = [], actions = [];
+    let actors = new Map(), actions = [];
 
     let isEnterFinished = false;
     function Member(name, sum) {
         this.name = name;
-        // this.sum = sum;
         this.balance = sum;
     }
-
-    console.log("Enter name of one and set of his costs\nor press Enter if that's all: ");
+    let actorIndex = 1;
+    // console.log("Enter name of one and set of his costs\nor press Enter if that's all: ");
     while (!isEnterFinished) {
-        const action = prompt("Enter name of one and set of his costs\nor press Enter if that's all: ", '');
+        let action = prompt(`Enter name of ${actorIndex++} actor and his cost\nor press Enter if that's all: `, '');
         if (action) {
             action = action.split(' ');
             let a;
@@ -22,78 +21,79 @@ function calculate() {
         else isEnterFinished = true;
     }
 
-    if (!actions.length) actions = [
-        ['A', 25, []],
-        ['B', 15, ['A', 'C']],
-        ['B', 20, []],
-        ['C', 34, []],
-        ['D', 40, []],
-        ['E', 20, ['A', 'B', 'D', 'F', 'G', 'H', 'I', 'J']],
-        ['F', 15, []],
-        ['G', 25, []],
-        ['H', 31, []],
-        ['I', 35, []],
-        ['J', 10, []],
-    ];
+    // if (!actions.length) actions = [
+    //     ['A', 25, []],
+    //     ['B', 15, ['A', 'C']],
+    //     ['B', 20, []],
+    //     ['C', 34, []],
+    //     ['D', 40, []],
+    //     ['E', 20, ['A', 'B', 'D', 'F', 'G', 'H', 'I', 'J']],
+    //     ['F', 15, []],
+    //     ['G', 25, []],
+    //     ['H', 31, []],
+    //     ['I', 35, []],
+    //     ['J', 10, []],
+    // ];
 
     let a = new Date().getMilliseconds();
     actions.forEach(e => { e[2] = e[2].sort().join('&') });
-    let costGroups = new Map(), names = Array.from(new Set(actions.map(e => e[0])));
+
+    let costGroups = new Map(); //списки множеств вкладчиков, сгруппированных по общим вкладам
+    let names = Array.from(new Set(actions.map(e => e[0]))); //список вкладчиков
 
     actions.forEach(e => {
-        !members.map(m => m.name).includes(e[0]) ?
-            members.push(new Member(e[0], e[1]))
-            : members.find(m => {
-                if (m.name !== e[0]) return false;
-                m.sum += e[1];
-                m.balance += e[1];
-                return true;
-            });
-        if (!costGroups.size || !Array.from(costGroups.keys()).includes(e[2])) costGroups.set(e[2], undefined);
+        !actors.has(e[0]) ?
+            actors.set(e[0], new Member(e[0], e[1]))
+            : actors.get(e[0]).balance += e[1];
+        if (!costGroups.size || !costGroups.has(e[2])) costGroups.set(e[2], undefined); //перечисление групп вкладчиков
     });
+    // console.log(actions);
 
-    Array.from(costGroups.keys()).forEach(g => {
-        costGroups.set(g, actions.filter(e => e[2] === g).map(e => e.slice(0, 2)));
+    for (let group of costGroups.keys()) {
+        costGroups.set(group, actions.filter(e => e[2] === group).map(e => e.slice(0, 2)));
+
         let a;
-        if (g.split('&').join('').length) a = g.split('&').length;
-        else a = 0;
-        if (new Set(costGroups.get(g).map(c => c[0])).size < names.length - a) {
-            const list = costGroups.get(g);
-            costGroups.set(g, [
+        group.split('&').join('').length ? a = group.split('&').length : a = 0;
+
+        if (new Set(costGroups.get(group).map(c => c[0])).size < names.length - a) {
+            const list = costGroups.get(group);
+            costGroups.set(group, [
                 ...list,
-                ...names.filter(n => !list.map(l => l[0]).includes(n) && !g.includes(n)).map(n => [n, 0]),
+                ...names.filter(n => !list.map(l => l[0]).includes(n) && !group.includes(n)).map(n => [n, 0]),
             ]);
         }
-    });
+    }
 
-    Array.from(costGroups.values()).forEach(g => {
-        const meanCost = g.reduce((sum, curr) => sum + curr[1], 0) / g.length;
-        g.forEach(i => members.forEach(m => {
-            if (i[0] === m.name) m.balance = Math.trunc((m.balance - meanCost) * 1000) / 1000;
-        }));
-    });
+    for (let acts of costGroups.values()) {
+        const meanCost = acts.reduce((sum, curr) => sum + curr[1], 0) / acts.length;
+        acts.forEach(act => {
+            let actor = actors.get(act[0]);
+            actor.balance = Math.trunc((actor.balance - meanCost) * 1000) / 1000;
+        })
+    }
 
-    let debtors = new Set(), creditors = new Set(), transactions = [];
-    members.sort((a, b) => b.balance - a.balance).forEach(m => {
-        if (m.balance < 0) debtors.add(m);
-        if (m.balance > 0) creditors.add(m);
+    let debtors = [], creditors = [], transactions = [];
+    Array.from(actors.values()).sort((a, b) => b.balance - a.balance).forEach(m => {
+        if (m.balance < 0) debtors.push(m);
+        if (m.balance > 0) creditors.push(m);
     });
 
     let round = n => Math.round(n * 10) / 10;
-
+    // console.log('deb:', debtors, 'cred:', creditors);
     debtors.forEach(d => {
-        creditors.forEach(c => {
-            if (d.balance + c.balance !== 0) return;
+        creditors.find(c => {
+            if (d.balance + c.balance !== 0) return false;
             transactions.push([d.name, c.name, round(c.balance)]);
             d.balance = 0;
             c.balance = 0;
-            debtors.delete(d);
-            creditors.delete(c);
+            return true
+            // debtors.delete(d);
+            // creditors.delete(c);
         });
     });
 
     debtors.forEach(d => {
-        if (d.balance === 0) return;
+        if (!d.balance) return;
         creditors.forEach(c => {
             if (!d.balance || !c.balance) return;
             if (d.balance + c.balance <= 0) {
@@ -108,7 +108,7 @@ function calculate() {
             }
         });
     });
-    console.log((new Date().getMilliseconds() - a) / 1000);
-    console.log(transactions);
+    // console.log((new Date().getMilliseconds() - a) / 1000);
+    console.table(transactions);
 }
 export default calculate;

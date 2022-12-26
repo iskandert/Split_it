@@ -5,6 +5,9 @@ import { Routes, Redirect, Navigate } from "react-router";
 import logo from './logo.svg';
 import { Counter } from './features/counter/Counter';
 import Button from '@mui/material/Button';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome/index';
+import { faRubleSign } from '@fortawesome/free-solid-svg-icons/faRubleSign';
+
 import {
   AppBar, Card, Chip, Collapse, Container,
   CssBaseline, Divider, Grid, IconButton,
@@ -12,12 +15,12 @@ import {
   InputAdornment,
   Link, Modal, Paper, Stack, TextField, Typography,
 } from '@mui/material';
-import { AccountCircle, Cancel, Close, DataUsage, Groups } from '@mui/icons-material';
+import { AccountCircle, AttachMoney, Cancel, Close, DataUsage, ExpandLess, ExpandMore, Groups, HighlightOff, IndeterminateCheckBox, MonetizationOn, PeopleAlt, Remove, RemoveCircle, ShoppingCart } from '@mui/icons-material';
 import { Box, typography } from '@mui/system';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
-import { grey } from '@mui/material/colors';
+import { green, grey } from '@mui/material/colors';
 // import './App.css';
-// import calculate from './features/calculating/calculate';
+import calculate from './features/calculating/calculate';
 
 const containerStyle = {
   maxWidth: {
@@ -112,10 +115,10 @@ const MembersList = () => {
 
 const MembersParams = () => {
   const [num, setNum] = React.useState('1');
-  const handleInputChange = e => { //WHAT THE FUCK
-    console.log(e);
+  const handleInputChange = e => {
+    // console.log(e);
     const text = e.target.value;
-    if (text.length <= 2) setNum(text);
+    if (text.length <= 2 && !text.match('-') && +text > 0) setNum(text);
   }
   return (
     <>
@@ -138,7 +141,7 @@ const MembersParams = () => {
           variant='standard'
           type='number'
           value={num}
-          onChange={handleInputChange} //WHAT THE FUCK
+          onChange={handleInputChange}
           // defaultValue={10}
           helperText="Some integer less then 100" />
       </Stack>
@@ -166,15 +169,193 @@ const MembersParams = () => {
 const MemberCard = (props) => {
   const [isExpanded, setExpanding] = React.useState(false);
   const handleExpanding = () => setExpanding(!isExpanded);
+  let sums = [
+    '1200000.10',
+    '1200000.00',
+    '1000.10',
+    '1000.00',
+    '100.10',
+    '100.00',
+    '10.10',
+    '10.00',
+    '1.10',
+    '1.00',
+  ];
+  const allSum = sums[props.data].split('.');
+  const isSumLengthCorrect = allSum[0].length <= 7;
+  // console.log(allSum[0].length, (allSum[1] === '00' ? 0 : 3));
   return (
-    <Paper elevation={6} >
-      <Box sx={{ height: '200px', width: '100%' }}>
-        {props.data}
+    <Paper elevation={6} sx={{ p: 1.5, position: 'relative', }} >
+      {/* <IconButton sx={{
+        color: grey['500'],
+        position: 'absolute',
+        height: '25px',
+        width: '25px',
+        top: 2,
+        right: 2,
+      }}>
+        <Remove sx={{
+          // <RemoveCircle sx={{
+          // color: grey['500'],
+          // fill: grey['300'],
+          transform: 'scale(0.8)',
+        }} /></IconButton> */}
+      <Box sx={{
+        display: 'flex',
+        alignItems: 'end',
+        width: '100%',
+        mb: 1,
+        // justifyContent: 'space-between',
+      }}>
+        <TextField sx={{
+          width: '50%',
+          // minWidth: '30%',
+          mr: 1,
+          borderRadius: 1,
+          bgcolor: grey['200'],
+        }}
+          size='small'
+          value={`Name ${props.data + 1}`}
+          label="Name"
+          InputLabelProps={{
+            shrink: true,
+          }} />
+        <Typography
+          variant={isSumLengthCorrect ? 'h5' : 'caption'}
+          color={isSumLengthCorrect ? theme.palette.success.main : theme.palette.error.main}
+          sx={{
+            flexGrow: 1,
+            // verticalAlign: 'text-bottom',
+            // pt: 2,
+            width: 'max-content',
+            justifySelf: 'end',
+            textAlign: 'right',
+            // lineHeight: '24px',
+            position: 'relative',
+
+            // pt: 1,
+            pr: isSumLengthCorrect ? 2.5 : 0,
+            borderBottom: `3px solid ${isSumLengthCorrect ? theme.palette.success.main : theme.palette.error.main}`,
+          }}>
+          {isSumLengthCorrect ?
+            (allSum[0] + (allSum[1] === '00' ? '' : '.')) : 'The sum is too big!'}
+          <Typography variant='body1' sx={{
+            display: allSum[1] === '00' || !isSumLengthCorrect ? 'none' : 'inline',
+          }}>
+            {allSum[1]}
+          </Typography>
+          <FontAwesomeIcon style={{
+            display: !isSumLengthCorrect ? 'none' : 'inline',
+            position: 'absolute',
+            right: 0,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            // opacity: 0.5,
+            color: theme.palette.success.light,
+            height: '20px'
+          }} icon={faRubleSign} />
+
+          {/* <AttachMoney sx={{
+            display: !isSumLengthCorrect ? 'none' : 'inline',
+            position: 'absolute',
+            right: 0
+          }} /> */}
+        </Typography>
+        <IconButton sx={{
+          color: grey['500'],
+          alignSelf: 'start',
+          // position: 'absolute',
+          height: '25px',
+          width: '25px',
+          mr: -1,
+          mt: -1,
+          // top: 2,
+          // right: 2,
+        }}>
+          <Remove sx={{
+            // <RemoveCircle sx={{
+            // color: grey['500'],
+            // fill: grey['300'],
+            transform: 'scale(0.8)',
+          }} /></IconButton>
       </Box>
-      <Collapse in={isExpanded} timeout='auto' >
-        <Box sx={{ height: '50px' }}></Box>
+      <Divider
+      // fontSize='1px' 
+      // color={grey['900']} 
+      >
+        <Typography variant='body2' sx={{
+          width: '100%',
+          textAlign: 'center',
+          color: grey['600'],
+        }}>
+          Cost details:
+        </Typography>
+      </Divider>
+      {/* <TextField value='Name' ></TextField> */}
+      <Collapse
+        in={isExpanded}
+        // in={false}
+        timeout='auto' >
+        <Box sx={{
+          pt: .5,
+          display: 'grid',
+          // rowGap: ,
+          columnGap: 1,
+          gridTemplateColumns: '6fr 8fr 6fr [end]',
+        }} >
+          <Typography variant='caption' sx={{
+            width: '100%',
+            // textAlign: 'center',
+            color: grey['600'],
+          }}>
+            Сost value
+          </Typography>
+          <Typography variant='caption' sx={{
+            // gridArea: '1 / 2 / 2 / end',
+            // width: '100%',
+            color: grey['600'],
+          }}>
+            Сost item
+          </Typography>
+          <Typography variant='caption' sx={{
+            gridArea: '1 / 3 / 2 / end',
+            // width: '100%',
+            color: grey['600'],
+          }}>
+            Payers
+          </Typography>
+          {Array.from({ length: 2 }, (_, i) => {
+            return <>
+              <TextField variant='standard' defaultValue='0.00'
+                sx={{ width: '100%', bgcolor: grey['500'] }} />
+              <TextField variant='standard' value={`Something${i + 1}`}
+                sx={{ width: '100%' }} />
+              <Box sx={{ display: 'flex', justifyContent: 'space-evenly', alignItems: 'center' }}>
+                <IconButton
+                  size='small'
+                // sx={{ justifySelf: 'end', alignSelf: 'center' }}
+                >
+                  <PeopleAlt />
+                </IconButton>
+                <IconButton
+                  size='small'
+                  color='error'
+                >
+                  <HighlightOff />
+                  {/* <RemoveCircle
+                  // sx={{ fill: grey['400'] }}
+                  /> */}
+                </IconButton>
+              </Box>
+            </>
+          })}
+        </Box>
       </Collapse>
-      <Button variant='contained' onClick={handleExpanding}>open</Button>
+      <Divider >
+        <IconButton size='small' onClick={handleExpanding}>{isExpanded ? <ExpandLess /> : <ExpandMore />}</IconButton>
+      </Divider>
+
+
     </Paper>
   )
 }
@@ -395,9 +576,10 @@ const PopUpPart = () => {
 }
 const theme = createTheme();
 // console.log(theme);
-
+let i = 0;
 function App() {
-  // calculate();
+  calculate();
+  console.log(i++);
   const asideRef = React.createRef();
 
 
